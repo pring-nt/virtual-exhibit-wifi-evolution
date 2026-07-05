@@ -7,7 +7,7 @@
 **Submitted by:**
 - Joshua Nacasabog
 - Jaica Pascual
-- Nathan Pring
+- Nathan Trinidad
 - Enzo Rosas
 - Jann Miro Quilantang
 
