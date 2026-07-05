@@ -83,7 +83,7 @@ function drawFloorplan(ctx, state, cellSize, isRouterSelected) {
 export default function FloorplanEditor({ state, dispatch, cellSize }) {
     const canvasRef = useRef(null);
 
-    // Router selection is local UI state — no need to put it in the reducer
+    // Router selection is local UI state: no need to put it in the reducer
     const [isRouterSelected, setIsRouterSelected] = useState(false);
 
     // isDragging tracks click-drag painting; a ref avoids triggering re-renders on mousemove
@@ -127,7 +127,7 @@ export default function FloorplanEditor({ state, dispatch, cellSize }) {
             return;
         }
 
-        // Router is selected → move it to the clicked cell (reducer validates wall constraint)
+        // Router is selected: move it to the clicked cell (reducer validates wall constraint)
         if (isRouterSelected) {
             dispatch({ type: 'MOVE_ROUTER', x, y });
             setIsRouterSelected(false);
