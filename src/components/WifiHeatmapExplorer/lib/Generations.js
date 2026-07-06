@@ -1,26 +1,16 @@
 /**
- * generations.js
+ * Generations.js
  * Per-generation WiFi router specs that feed into the propagation model.
- *
- * maxStrength:     Starting signal budget (higher = stronger router, more range).
- *                  Open-space range ≈ maxStrength / distanceCostPerCell.
- *
- * frequencyBand:   Affects per-step distance falloff.
- *                  2.4 GHz travels further; 5 GHz drops off faster but has higher throughput.
- *                  See DISTANCE_COST in propagation.js.
- *
- * wallPenetration: Multiplier applied to each wall's attenuation value.
- *                  < 1.0 = better penetration (walls hurt less).
- *                  > 1.0 = worse penetration (walls hurt more, typical of 5 GHz early gen).
  *
  * @typedef {Object} Generation
  * @property {string} id
- * @property {string} label           - Short display name, e.g. "WiFi 4"
- * @property {string} standard        - IEEE standard, e.g. "802.11n"
- * @property {string} year            - Year of introduction
+ * @property {string} label
+ * @property {string} standard
+ * @property {string} year
  * @property {number} maxStrength
  * @property {'2.4GHz'|'5GHz'|'dual'} frequencyBand
  * @property {number} wallPenetration
+ * @property {string} description   - Short summary shown in heatmap mode
  */
 
 /** @type {Generation[]} */
@@ -33,7 +23,7 @@ export const GENERATIONS = [
         maxStrength:     60,
         frequencyBand:   '2.4GHz',
         wallPenetration: 1.0,
-        // Open-space range ≈ 30 cells (2.4 GHz falloff = 2.0/cell)
+        description:     'Wide 2.4 GHz coverage with reasonable wall penetration, but a hard 11 Mbps ceiling and a crowded band made real-world performance unreliable.',
     },
     {
         id:              'wifi2',
@@ -43,8 +33,7 @@ export const GENERATIONS = [
         maxStrength:     55,
         frequencyBand:   '5GHz',
         wallPenetration: 1.4,
-        // 5 GHz: shorter range (~16 cells) and worse wall penetration
-        // Demonstrates the core 5 GHz vs 2.4 GHz tradeoff
+        description:     'Faster speeds and less interference on 5 GHz — but that same band means noticeably shorter range and walls hit it much harder than 2.4 GHz.',
     },
     {
         id:              'wifi3',
@@ -54,7 +43,7 @@ export const GENERATIONS = [
         maxStrength:     70,
         frequencyBand:   '2.4GHz',
         wallPenetration: 1.0,
-        // Stronger than 802.11b at the same frequency, range ≈ 35 cells
+        description:     'OFDM on 2.4 GHz: better speeds than WiFi 1 with the same range and full backward compatibility. The crowd-pleaser of its era.',
     },
     {
         id:              'wifi4',
@@ -64,7 +53,7 @@ export const GENERATIONS = [
         maxStrength:     85,
         frequencyBand:   'dual',
         wallPenetration: 0.85,
-        // MIMO introduced — first generation with meaningfully better wall penetration
+        description:     'MIMO changed everything. Dual-band support and multiple antennas made this the first standard that felt genuinely reliable across most homes and offices.',
     },
     {
         id:              'wifi5',
@@ -74,7 +63,7 @@ export const GENERATIONS = [
         maxStrength:     95,
         frequencyBand:   '5GHz',
         wallPenetration: 1.1,
-        // 5 GHz only, high throughput but range (~27 cells) limited by frequency
+        description:     'Gigabit speeds at last — but 5 GHz only. Excellent throughput in open spaces; expect a significant drop through walls and over distance.',
     },
     {
         id:              'wifi6',
@@ -84,7 +73,7 @@ export const GENERATIONS = [
         maxStrength:     110,
         frequencyBand:   'dual',
         wallPenetration: 0.7,
-        // OFDMA + BSS coloring — significantly better wall penetration, range ≈ 44 cells
+        description:     'Built for dense environments. OFDMA, better wall penetration, and dual-band efficiency mean coverage holds up where earlier standards fade.',
     },
     {
         id:              'wifi6e',
@@ -94,6 +83,6 @@ export const GENERATIONS = [
         maxStrength:     120,
         frequencyBand:   'dual',
         wallPenetration: 0.6,
-        // 6 GHz band unlocked — strongest overall, best penetration, range ≈ 48 cells
+        description:     'Fresh, uncongested 6 GHz spectrum and the best peak speeds — but the highest frequency means the worst wall penetration of any generation here.',
     },
 ];

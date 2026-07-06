@@ -7,10 +7,10 @@ import RouterMarker from './RouterMarker.jsx';
 // Drawing constants
 // ---------------------------------------------------------------------------
 
-const GRID_LINE_COLOR = '#e2e8f0';
 const ROUTER_COLOR    = '#2563eb';
 const ROUTER_SELECTED = '#f59e0b';
 const ROUTER_OUTLINE  = '#ffffff';
+const GRID_LINE_COLOR = '#e2e8f0';
 
 // ---------------------------------------------------------------------------
 // Canvas draw — called via useEffect, not during render
@@ -31,16 +31,13 @@ function drawFloorplan(ctx, state, cellSize, isRouterSelected) {
 
     ctx.clearRect(0, 0, W, H);
 
-    // --- Cells ---
     for (let y = 0; y < gridHeight; y++) {
         for (let x = 0; x < gridWidth; x++) {
-            const config = CELL_CONFIGS[grid[y * gridWidth + x]];
-            ctx.fillStyle = config.color;
+            ctx.fillStyle = CELL_CONFIGS[grid[y * gridWidth + x]].color;
             ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
         }
     }
 
-    // --- Grid lines (batched into one path for performance) ---
     ctx.beginPath();
     for (let x = 0; x <= gridWidth; x++) {
         ctx.moveTo(x * cellSize + 0.5, 0);
@@ -82,24 +79,21 @@ function drawFloorplan(ctx, state, cellSize, isRouterSelected) {
  */
 export default function FloorplanEditor({ state, dispatch, cellSize }) {
     const canvasRef = useRef(null);
-
-    // Router selection is local UI state: no need to put it in the reducer
     const [isRouterSelected, setIsRouterSelected] = useState(false);
-
-    // isDragging tracks click-drag painting; a ref avoids triggering re-renders on mousemove
     const isDragging = useRef(false);
 
-    // Redraw whenever grid, router position, or router selection changes
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
-        const ctx = canvas.getContext('2d');
-        drawFloorplan(ctx, state, cellSize, isRouterSelected);
+        drawFloorplan(canvas.getContext('2d'), state, cellSize, isRouterSelected);
     }, [state, cellSize, isRouterSelected]);
 
-    // ---------------------------------------------------------------------------
-    // Helpers
-    // ---------------------------------------------------------------------------
+    // Update cursor directly on canvas DOM node — avoids re-renders on every mouse move
+    useEffect(() => {
+        if (canvasRef.current) {
+            canvasRef.current.style.cursor = isRouterSelected ? 'cell' : 'crosshair';
+        }
+    }, [isRouterSelected]);
 
     function getCellCoords(e) {
         const rect = canvasRef.current.getBoundingClientRect();
@@ -113,57 +107,49 @@ export default function FloorplanEditor({ state, dispatch, cellSize }) {
         return x >= 0 && x < state.gridWidth && y >= 0 && y < state.gridHeight;
     }
 
-    // ---------------------------------------------------------------------------
-    // Mouse handlers
-    // ---------------------------------------------------------------------------
-
     function handleMouseDown(e) {
         const { x, y } = getCellCoords(e);
         if (!inBounds(x, y)) return;
 
-        // Clicked the router → select it for placement
         if (x === state.router.x && y === state.router.y) {
             setIsRouterSelected(true);
             return;
         }
-
-        // Router is selected: move it to the clicked cell (reducer validates wall constraint)
         if (isRouterSelected) {
             dispatch({ type: 'MOVE_ROUTER', x, y });
             setIsRouterSelected(false);
             return;
         }
-
-        // Otherwise → start painting
         isDragging.current = true;
         dispatch({ type: 'PAINT_CELL', x, y });
     }
 
     function handleMouseMove(e) {
-        if (!isDragging.current) return;
         const { x, y } = getCellCoords(e);
+
+        // Update cursor when hovering over the router cell
+        if (canvasRef.current && !isRouterSelected) {
+            const overRouter = x === state.router.x && y === state.router.y;
+            canvasRef.current.style.cursor = overRouter ? 'pointer' : 'crosshair';
+        }
+
+        if (!isDragging.current) return;
         if (!inBounds(x, y)) return;
         dispatch({ type: 'PAINT_CELL', x, y });
     }
 
-    function handleMouseUp() {
-        isDragging.current = false;
-    }
-
-    function handleMouseLeave() {
-        isDragging.current = false;
-    }
-
-    // ---------------------------------------------------------------------------
-    // Render
-    // ---------------------------------------------------------------------------
-
-    const cursorClass = isRouterSelected ? 'cursor-cell' : 'cursor-crosshair';
+    function handleMouseUp()    { isDragging.current = false; }
+    function handleMouseLeave() { isDragging.current = false; }
 
     return (
-        <div className="flex flex-col gap-3">
-
-            <MaterialToolbar state={state} dispatch={dispatch} />
+        <div className="flex flex-col gap-3 w-full">
+            <MaterialToolbar
+                state={state}
+                dispatch={dispatch}
+                isRouterSelected={isRouterSelected}
+                onMoveRouter={() => setIsRouterSelected(true)}
+                onClearAll={() => dispatch({ type: 'CLEAR_GRID' })}
+            />
 
             <canvas
                 ref={canvasRef}
@@ -173,7 +159,7 @@ export default function FloorplanEditor({ state, dispatch, cellSize }) {
                 onMouseMove={handleMouseMove}
                 onMouseUp={handleMouseUp}
                 onMouseLeave={handleMouseLeave}
-                className={`block border border-slate-200 rounded-sm select-none ${cursorClass}`}
+                className="block border border-border rounded-sm select-none w-full"
             />
 
             <RouterMarker
@@ -181,7 +167,6 @@ export default function FloorplanEditor({ state, dispatch, cellSize }) {
                 isRouterSelected={isRouterSelected}
                 onDeselect={() => setIsRouterSelected(false)}
             />
-
         </div>
     );
 }
