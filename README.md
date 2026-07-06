@@ -1,13 +1,13 @@
-# [The Evolution of Wi-Fi]([https://docs.google.com/document/d/1PpgzTTaoYTDf0LYQLVLaEKhknVlml7rv/edit](https://docs.google.com/document/d/1PpgzTTaoYTDf0LYQLVLaEKhknVlml7rv/edit?usp=sharing&ouid=118258009009741865506&rtpof=true&sd=true))
+# [The Evolution of Wi-Fi](https://docs.google.com/document/d/1PpgzTTaoYTDf0LYQLVLaEKhknVlml7rv/edit?usp=sharing&ouid=118258009009741865506&rtpof=true&sd=true)
 
-**CSARCH2 | 3rd Term 2025–2026 | S01 |Group No. 6**
+**CSARCH2 | 3rd Term 2025–2026 | S01 | Group No. 6**
 
 > *A Hardware/Software Deep-Dive exhibit tracing the history of Wi-Fi standards from 802.11b to Wi-Fi 7.*
 
 **Submitted by:**
 - Joshua Nacasabog
 - Jaica Pascual
-- Nathan Pring
+- Nathan Trinidad
 - Enzo Rosas
 - Jann Miro Quilantang
 
@@ -15,18 +15,103 @@
 
 ## Table of Contents
 
-- [Topic Theme](#-topic-theme)
-- [Background Overview](#-background-overview)
-- [Theme Overview](#-theme-overview)
+- [Incremental Development Log](#incremental-development-log)
+  - [What Was Built](#what-was-built)
+  - [Aha Moments](#aha-moments)
+  - [Challenges](#challenges)
+  - [Creative Development](#creative-development)
+- [AI Usage Declaration](#ai-usage-declaration)
+- [Topic Theme](#topic-theme)
+- [Background Overview](#background-overview)
+- [Theme Overview](#theme-overview)
   - [Wi-Fi Generations](#wi-fi-generations)
-- [Key Content Areas](#-key-content-areas)
-- [Tech Stack](#-tech-stack)
+- [Key Content Areas](#key-content-areas)
+- [Tech Stack](#tech-stack)
   - [Core Technologies](#core-technologies)
   - [Interactive Elements](#interactive-elements)
-- [Style Guide](#-style-guide)
+- [Style Guide](#style-guide)
   - [Layout & Spacing](#layout--spacing)
   - [UI Components & Tone](#ui-components--tone)
-- [Design Mockups](#-design-mockups)
+- [Interactive Element Design](#interactive-element-design)
+
+---
+
+## Incremental Development Log
+
+### What Was Built
+
+The core deliverable for this increment is a fully functional **Wi-Fi Signal Heatmap Explorer** embedded in the exhibit page. The component is self-contained and covers the full feature loop: floor plan editing, router placement, and per-generation signal heatmap visualization.
+
+**Component structure:**
+
+```
+src/
+└── components/
+    └── WifiHeatmapExplorer/
+        ├── index.jsx                  <- root, useReducer, mode switching, preset grid
+        ├── FloorplanEditor/
+        │   ├── index.jsx              <- canvas rendering, mouse interaction
+        │   ├── MaterialToolbar.jsx    <- wall brush selector, move router, clear all
+        │   └── RouterMarker.jsx       <- status bar / placement prompt
+        ├── HeatmapViewer/
+        │   ├── index.jsx              <- heatmap canvas, legend, generation summary
+        │   └── GenerationSelector.jsx <- shadcn Tabs generation switcher
+        └── lib/
+            ├── CellTypes.js           <- cell type constants + attenuation values
+            ├── Generations.js         <- per-generation specs + descriptions
+            └── Propagation.js         <- Dijkstra signal propagation + diffusion passes
+```
+
+**Exhibit page** (`src/pages/wifi-evolution.mdx`) was written from scratch with structured content covering background history, a frequency band explainer, per-standard sections with real-world vs. theoretical performance figures, and the interactive simulator at the end as a synthesis activity.
+
+---
+
+### Aha Moments
+
+**shadcn/ui on Tailwind v4 needs explicit path aliases at two levels.**
+`tsconfig.json` paths (`"@/*": ["./src/*"]`) handle editor tooling and type resolution, but Vite doesn't read `tsconfig.json` at bundle time. The `resolve.alias` entry in `astro.config.mjs` is what actually makes `@/components/ui/button` resolve at runtime. Both are required.
+
+**CSS variable namespace collision.**
+shadcn's generated `tailwind.css` defines variables like `--background`, `--muted`, `--border`, and `--ring` under `:root` globally. The existing `global.css` (which we cannot modify) uses some of the same variable names for the exhibit's link and text colors. shadcn's values were silently overwriting them, causing hyperlinks and text to go near-invisible across the whole site. The fix was scoping shadcn's `:root` block to `.wifi-explorer` instead — the component's root class — so the variables are only defined within the component's subtree and never reach the rest of the page.
+
+**`client:only="react"` vs `client:load`.**
+The canvas-based component uses `window` and `document` directly. Astro's default behavior tries to server-render React components before hydrating them on the client, which throws `window is not defined` during the SSR pass. `client:only="react"` skips SSR entirely for the component, which is the correct directive for anything that depends on browser APIs.
+
+---
+
+### Challenges
+
+**Setup complexity for Tailwind v4 + shadcn.**
+The combination of using Tailwind v4, an Astro project, a forked repo with locked files, and shadcn's own init process created a longer-than-expected setup chain. Each tool had its own requirements that weren't always compatible out of the box: Tailwind v4 needs the Vite plugin, shadcn needs the CSS entry point pointed at the right file, the path alias needs to exist in both tsconfig and Vite config, and the shadcn CSS variables need to be scoped to avoid colliding with the exhibit's existing styles.
+
+**Working within the locked file constraints.**
+`global.css`, both layout files, and the existing components were off-limits. This ruled out the most obvious solutions (import Tailwind in the layout, scope CSS in the layout) and required alternative approaches: importing `tailwind.css` from the MDX page instead, and scoping CSS variables to the component's root class rather than `:root`.
+
+---
+
+### Creative Development
+
+**Dijkstra-based signal propagation instead of a radial gradient.**
+The original proposal described the heatmap as "radial gradient painting that propagates outward from the router tile." The actual implementation uses a max-heap Dijkstra algorithm (`Propagation.js`) where signal strength at each cell equals the starting power minus distance falloff minus the sum of wall attenuation penalties along the best-available path. This means the signal automatically routes around walls when doing so preserves more signal than passing through them — which is physically accurate and produces a much more interesting and educational heatmap than a simple radial falloff would.
+
+**Diffusion passes for realistic corner leakage.**
+After the main Dijkstra pass, three diffusion rounds propagate a fraction of each cell's signal to its four orthogonal neighbors at a high extra cost. This prevents the hard geometric shadow artifacts that pure line-of-sight BFS produces behind every wall corner, making the result look physically plausible without being computationally expensive.
+
+**All heatmaps precomputed on mode entry.**
+When the user clicks "View Heatmap," the component immediately computes all seven generation heatmaps and caches them as `Float32Array[]` in the reducer state. Switching between generations is then an instant array index swap with no recomputation. On returning to floor plan mode, the cache is discarded entirely so re-entry always reflects the current layout.
+
+---
+
+## AI Usage Declaration
+
+This project responsibly leverages artificial intelligence (AI) tools to assist during development and documentation. AI assistance was utilized in the following areas:
+
+- **Environment & Library Setup:** Troubleshooting initial configurations and optimizing dependency setups (e.g., Astro, React, and Tailwind CSS integrations).
+- **Documentation & Technical Explanations:** Simplifying complex library mechanics and breaking down official documentation frameworks.
+- **Code Documentation:** Assisting in the generation of clear, inline code comments and architectural explanations.
+- **Text & Copy Editing:** Refining grammar, correcting formatting typos, and improving readability across markdown and documentation files.
+
+> **Note:** All AI-generated suggestions, configurations, and text were thoroughly reviewed, tested, and verified by the maintainer to ensure technical accuracy and project integrity.
 
 ---
 
@@ -55,46 +140,48 @@ The exhibit covers the evolution of Wi-Fi standards over the decades, from the o
 ### Wi-Fi Generations
 
 | Standard | Year | Also Known As | Key Highlights |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | 802.11b | 1999 | Wi-Fi 1 | 2.4 GHz, 11 Mbps max, CCK modulation |
-| 802.11a | 1999 | — | 5 GHz, 54 Mbps, OFDM |
-| 802.11g | 2003 | — | 2.4 GHz, 54 Mbps, OFDM, backward compatible with 802.11b |
+| 802.11a | 1999 | Wi-Fi 2 | 5 GHz, 54 Mbps, OFDM |
+| 802.11g | 2003 | Wi-Fi 3 | 2.4 GHz, 54 Mbps, OFDM, backward compatible with 802.11b |
 | 802.11n | 2009 | Wi-Fi 4 | Dual-band (2.4 + 5 GHz), MIMO introduced |
 | 802.11ac | 2013 | Wi-Fi 5 | 5 GHz, gigabit speeds, MU-MIMO |
-| 802.11ax | 2020 | Wi-Fi 6/6E | Dual-band, reduced subcarrier spacing, scheduled resource allocation |
+| 802.11ax | 2019 | Wi-Fi 6 | Dual-band, OFDMA, reduced subcarrier spacing, scheduled resource allocation |
+| 802.11ax (6 GHz) | 2021 | Wi-Fi 6E | Adds 6 GHz band, freshest spectrum, worst wall penetration |
 | 802.11be | Present | Wi-Fi 7 | Up to 46 Gbps, 320 MHz channels, Multi-Link Operation |
 
-#### <mark>802.11b (1999)</mark>
-<mark>Also known as Wi-Fi 1, it operates on an unlicensed ISM frequency with a channel bandwidth of 22 MHz, with a maximum theoretical output of 11 Mbps and a fallback of 1–2 Mbps. It used complex M-Ary orthogonal coding known as Complementary Code Keying (CCK). It was considered ineffective because other wireless methods of the time shared the same range and caused interference in the Wi-Fi signals.</mark>
+#### 802.11b (1999)
+Also known as Wi-Fi 1, it operates on an unlicensed ISM frequency with a channel bandwidth of 22 MHz, with a maximum theoretical output of 11 Mbps and a fallback of 1-2 Mbps. It used complex M-Ary orthogonal coding known as Complementary Code Keying (CCK). It was considered ineffective because other wireless methods of the time shared the same range and caused interference in the Wi-Fi signals.
 
-#### <mark>802.11a (1999)</mark>
-<mark>Unlike the 802.11b, this one operated on the 5 GHz band using OFDM (Orthogonal Frequency Division Multiplexing), offering speeds up to 54 Mbps. Although faster than 802.11b, it has a shorter range and less wall penetration.</mark>
+#### 802.11a (1999)
+Unlike the 802.11b, this one operated on the 5 GHz band using OFDM (Orthogonal Frequency Division Multiplexing), offering speeds up to 54 Mbps. Although faster than 802.11b, it has a shorter range and less wall penetration.
 
-#### <mark>802.11g (2003)</mark>
-<mark>Used the same OFDM tech as 802.11a, but combined both of the better qualities of 802.11a and 802.11b, offering higher speeds with broader range and backward compatibility with 802.11b.</mark>
+#### 802.11g (2003)
+Used the same OFDM tech as 802.11a, but combined both of the better qualities of 802.11a and 802.11b, offering higher speeds with broader range and backward compatibility with 802.11b.
 
-#### <mark>802.11n (2009)</mark>
-<mark>First one to be actually considered good enough for commercial use. It combined both the 2.4 GHz and 5 GHz bands of 802.11a and 802.11b while introducing MIMO (Multiple Input Multiple Output).</mark>
+#### 802.11n (2009)
+First standard considered genuinely capable for demanding commercial environments. It combined both the 2.4 GHz and 5 GHz bands of 802.11a and 802.11b while introducing MIMO (Multiple Input Multiple Output).
 
-#### <mark>802.11ac (2013)</mark>
-<mark>First Wi-Fi standard to provide gigabit speeds per second. Operated on the 5 GHz band and introduced wider channels and multi-user MIMO.</mark>
+#### 802.11ac (2013)
+First Wi-Fi standard to provide gigabit speeds per second. Operated on the 5 GHz band and introduced wider channels and Multi-User MIMO.
 
-#### <mark>802.11ax (2020)</mark>
-<mark>Also known as Wi-Fi 6E, it was the one that introduced dual-band support across both 2.4 GHz and 5 GHz, reduced subcarrier spacing (78.125 kHz), and schedule-based resource allocation.</mark>
+#### 802.11ax - Wi-Fi 6 (2019) and Wi-Fi 6E (2021)
+Wi-Fi 6 introduced dual-band support across both 2.4 GHz and 5 GHz, OFDMA, reduced subcarrier spacing (78.125 kHz), and schedule-based resource allocation. Wi-Fi 6E extended this to the 6 GHz band, adding up to 1,200 MHz of fresh, uncongested spectrum.
 
-#### <mark>802.11be (Present)</mark>
-<mark>Also known as Wi-Fi 7, it is backwards compatible with Wi-Fi 6E, uses OFDMA, and operates in both 2.4 and 5.6 GHz, supports up to 46 Gbps, introduces 320 MHz channels, and Multi-Link Operation.</mark>
+#### 802.11be (Present)
+Also known as Wi-Fi 7, it is backwards compatible with Wi-Fi 6E, uses OFDMA, operates across all three bands (2.4, 5, and 6 GHz), supports up to 46 Gbps, introduces 320 MHz channels, and Multi-Link Operation (MLO).
 
 ---
 
 ## Key Content Areas
 
-The exhibit will cover the following content areas:
+The exhibit covers the following content areas:
 
-- **Frequency Bands** and what they mean
+- **Frequency Bands** and what they mean (2.4 GHz vs 5 GHz vs 6 GHz tradeoffs)
 - **How Wi-Fi shaped the information age**
 - **Per-generation comparison:** 802.11b to 802.11be
-- **Real World vs. Theoretical Performance**
+- **Real-world vs. theoretical performance** per standard
+- **Interactive signal propagation simulator**
 
 ---
 
@@ -103,70 +190,66 @@ The exhibit will cover the following content areas:
 ### Core Technologies
 
 | Category | Technology |
-|---|---|
+| --- | --- |
 | Framework | Astro 6 |
 | Runtime | Node.js 26 |
 | Content Format | `.mdx` (Markdown Extended) |
-| Component Language | React (`.jsx` / `.tsx`) |
+| Component Language | React (`.jsx` for authored components, `.tsx` for shadcn/ui generated files) |
 | Version Control | GitHub (forked from provided template) |
-| CSS Framework | TailwindCSS v4 |
-| UI Components | Shadcn/ui |
+| CSS Framework | TailwindCSS v4 (via `@tailwindcss/vite` Vite plugin) |
+| UI Components | shadcn/ui (Sera preset) |
 | Icons | Lucide Icons |
-| State Management | Zustand |
+| State Management | `useReducer` (React built-in) |
 
 ### Interactive Elements
 
 #### Wi-Fi Floor Plan Simulator
 
-A drag-and-drop 2D floor plan builder where users construct a room, place a router, and toggle a signal strength heatmap. The heatmap behavior updates when the user switches between Wi-Fi generations, visually demonstrating how different standards handle range, frequency, and obstacle penetration differently.
+A 2D floor plan editor where users paint wall materials onto a grid, place a router, and toggle a signal strength heatmap. The heatmap updates when the user switches between Wi-Fi generations, visually demonstrating how different standards handle range, frequency, and obstacle penetration.
 
 **The Grid**
 
-The floor plan is a tile-based rectangular grid (e.g., 20×15 cells) rendered top-down. Each cell represents a unit of space. Users interact with the grid by dragging blocks from a side palette and dropping them onto cells.
+The floor plan is a tile-based rectangular grid (40x30 cells) rendered top-down on a `<canvas>` element. Each cell represents approximately one square meter. Users paint cells by clicking or click-dragging.
 
-**Placeable Blocks**
+**Paintable Cell Types**
 
-| Block Type | Signal Effect |
-|---|---|
-| Empty space | No attenuation |
-| Interior wall | Moderate signal reduction |
-| Concrete/exterior wall | Heavy signal reduction |
-| Wooden furniture | Minor reduction |
-| Metal appliance | Strong reduction/reflection |
+| Cell Type | Signal Effect |
+| --- | --- |
+| Empty space | Distance falloff only |
+| Drywall (interior wall) | -3 dB attenuation |
+| Concrete (exterior wall) | -12 dB attenuation |
+| Metal appliance | -20 dB attenuation |
 
 **Router Placement**
 
-A router token can be freely dragged and dropped anywhere on the grid. It acts as the signal origin point for the heatmap calculation.
+A router marker is displayed on the grid. Users click the router (or the Router button in the toolbar) to enter placement mode, then click any empty cell to move it. The router cannot be placed on a wall cell.
 
-**Heatmap Toggle**
+**Heatmap Mode**
 
-A "Show Heatmap" button overlays a canvas layer on top of the grid using radial gradient painting that propagates outward from the router tile. Signal strength drops as it passes through obstacle tiles based on each block's attenuation value.
+Clicking "View Heatmap" precomputes signal heatmaps for all seven generations simultaneously using a Dijkstra-based propagation algorithm. Signal at each cell is calculated as:
+
+```
+signal = maxStrength - (distanceCost x distance) - sum(wallAttenuation x wallPenetration)
+```
+
+Switching between generations is an instant cache lookup with no recomputation. Returning to floor plan mode discards the cache.
 
 | Color | Signal Strength |
-|---|---|
-| Deep Crimson / Vibrant Red | Strong Signal (Peak Intensity) |
-| Fiery Orange / Golden Orange | Moderate Signal |
-| Warm Yellow / Light Yellow | Weak Signal |
-| Light Gray | Dead Zone (Zero Signal / No Access) |
-
-The canvas redraws in real time whenever blocks are moved, the router is repositioned, or the Wi-Fi generation is switched.
+| --- | --- |
+| Green | Strong signal |
+| Yellow | Moderate signal |
+| Red | Weak signal |
+| White | No signal / dead zone |
 
 **Wi-Fi Generation Switcher**
 
-A tab/strip selector above the floor plan lets users cycle through generations:
+A tab strip above the heatmap lets users cycle through seven generations:
 
 ```
-802.11b → 802.11g → 802.11n → 802.11ac → 802.11ax → 802.11be
+WiFi 1 (802.11b) -> WiFi 2 (802.11a) -> WiFi 3 (802.11g) -> WiFi 4 (802.11n) -> WiFi 5 (802.11ac) -> WiFi 6 (802.11ax) -> WiFi 6E
 ```
 
-Selecting a generation updates both of its sub-views:
-
-<mark>
-
-- **Information Tab:** Displays a card outlining the generation's core specifications (e.g. frequency band, max theoretical vs. real-world throughput, modulation techniques like CCK/DSSS, and historical context).
-- **Simulator Tab:** Adjusts the heatmap model — e.g., 2.4 GHz generations show wider range but worse interference handling; 5 GHz generations show faster speeds but shorter range and weaker wall penetration.
-
-</mark>
+Selecting a generation updates the heatmap canvas and displays a short summary description of that generation's signal characteristics. WiFi 7 (802.11be) is covered in the exhibit text but not yet modeled in the simulator.
 
 ---
 
@@ -174,32 +257,35 @@ Selecting a generation updates both of its sub-views:
 
 ### Layout & Spacing
 
-<mark>The exhibit will use a clean and organized layout with the Wi-Fi workspace as the main focus of the page. The workspace will feature a two-tab interface centered on the page, defaulting to the Information tab while allowing users to switch to the Simulator tab. The control buttons, such as "Place Router," "Reset," and "Show Heatmap," will be grouped near the floor plan within the Simulator tab for easy access. A heatmap legend will be placed beside or below the simulator to help users understand the signal strength colors. Proper spacing will be used between the buttons, legend, floor plan, and information cards to keep the interface readable and not overcrowded.</mark>
+The exhibit uses a clean, article-style layout with the Wi-Fi simulator placed at the end of the page as a synthesis activity — after the background history, frequency band explainer, and per-standard sections. The simulator itself uses a two-mode interface: Edit Floor Plan (default) and View Heatmap. Controls are grouped in a toolbar above the canvas. The heatmap legend and generation summary sit below the canvas.
 
 ### UI Components & Tone
 
-<mark>The main UI component of the exhibit will be an interactive Wi-Fi workspace driven by a generation selector, which defaults to a pre-selected Wi-Fi generation upon loading. The workspace is split into two primary views, with the Information tab displayed by default:
+The main UI component is the `WifiHeatmapExplorer`, which uses shadcn/ui (Sera preset) for all buttons and tabs. The Sera preset was chosen for its sharp, non-rounded aesthetic which suits a technical instrument-style tool.
 
-- **Information Tab:** The initial active view, which displays a dedicated technical breakdown and history card for the currently selected Wi-Fi generation, outlining its specific frequency bands, throughput limits, modulation techniques, and real-world context.
+**Edit Floor Plan mode:**
+- Toolbar with wall material brush buttons (Drywall, Concrete, Metal, Eraser), a Router placement button, and a Clear All button
+- Canvas with `cursor-crosshair` for painting and `cursor-pointer` when hovering the router
+- Status bar that becomes an amber callout banner during router placement mode
 
-- **Simulator Tab:** <mark>Features a draggable router sprite that users can place anywhere on the floor plan grid. Once the router is placed, the signal strength heatmap will update depending on the router's position and the surrounding obstacles, such as walls, furniture, concrete barriers, metal appliances, and other interference sources. The heatmap will visually show how the Wi-Fi signal spreads across the room, with colors indicating excellent, strong, moderate, fair, weak, or very weak/dead-zone areas. Users will also be able to customize their own floor plans by placing or removing objects on the grid, allowing them to experiment with how different layouts affect Wi-Fi coverage.</mark>
-
-<mark>Additional UI components within the Simulator tab will include a reset button, a router placement mode, a floor plan editing toolbar, and a heatmap toggle button.</mark> A side palette from the floor plan editing toolbar may be used to let users drag and drop different objects, such as interior walls, concrete walls, wooden furniture, metal appliances, and interference sources. A Wi-Fi generation selector is included above the workspace so users can compare how different Wi-Fi standards affect signal range, speed, and obstacle penetration. To make the simulator easier to understand, the interface will include a color legend for the heatmap and an information card that updates based on the selected Wi-Fi generation.
-
----
-
-## Design Mockups
-
-### Figure 1 — Information Tab (802.11b)
-
-![Information Tab Mockup](./assets/InformationTab.png)
-
-> *Mockup of the Information tab displaying the technical breakdown and history card for 802.11b.*
+**View Heatmap mode:**
+- shadcn Tabs generation selector spanning the canvas width
+- Detail row showing the selected generation's IEEE standard, year, and frequency band
+- Canvas rendering the signal heatmap with wall overlays
+- Color legend and one-line generation summary below
 
 ---
 
-### Figure 2 — Simulator Tab (802.11b)
+## Interactive Element Design
 
-![Simulator Tab Mockup](./assets/InteractiveElement.png)
+### Figure 1 - Wi-Fi Heatmap View (802.11b)
 
-> *Mockup of the Simulator tab showing the floor plan grid, router placement, and heatmap overlay for 802.11b.*
+![Wifi Heatmap View](./src/assets/WifiHeatmap.png)
+
+> *The Simulator tab showing the heatmap overlay for 802.11b.*
+
+### Figure 2 - Floor Plan Builder
+
+![Floor Plan Builder](./src/assets/WifiFloorPlan.png)
+
+> *The Simulator tab showing the floor plan builder.*

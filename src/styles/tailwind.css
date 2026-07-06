@@ -1,4 +1,5 @@
-@import "tailwindcss";
+@import "tailwindcss/theme";
+@import "tailwindcss/utilities";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/noto-sans";
@@ -6,7 +7,7 @@
 
 @custom-variant dark (&:is(.dark *));
 
-:root {
+.wifi-explorer {
     --background: oklch(1 0 0);
     --foreground: oklch(0.147 0.004 49.3);
     --card: oklch(1 0 0);
@@ -41,7 +42,7 @@
     --sidebar-ring: oklch(0.714 0.014 41.2);
 }
 
-.dark {
+.wifi-explorer.dark {
     --background: oklch(0.147 0.004 49.3);
     --foreground: oklch(0.986 0.002 67.8);
     --card: oklch(0.214 0.009 43.1);
@@ -119,13 +120,10 @@
 }
 
 @layer base {
-  * {
-    @apply border-border outline-ring/50;
+    .wifi-explorer * {
+        @apply border-border outline-ring/50;
     }
-  body {
-    @apply bg-background text-foreground;
-    }
-  html {
-    @apply font-sans;
+    .wifi-explorer {
+        @apply bg-background text-foreground font-sans;
     }
 }
