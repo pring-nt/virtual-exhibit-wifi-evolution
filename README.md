@@ -1,4 +1,4 @@
-# [The Evolution of Wi-Fi](https://docs.google.com/document/d/1PpgzTTaoYTDf0LYQLVLaEKhknVlml7rv/edit?usp=sharing&ouid=118258009009741865506&rtpof=true&sd=true)
+# The Evolution of Wi-Fi
 
 **CSARCH2 | 3rd Term 2025–2026 | S01 | Group No. 6**
 
