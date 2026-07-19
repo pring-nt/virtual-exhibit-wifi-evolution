@@ -42,26 +42,56 @@
 
 The core deliverable for this increment is a fully functional **Wi-Fi Signal Heatmap Explorer** embedded in the exhibit page. The component is self-contained and covers the full feature loop: floor plan editing, router placement, and per-generation signal heatmap visualization.
 
-**Component structure:**
-
+**Project & Component Structure:**
 ```
 src/
-└── components/
-    └── WifiHeatmapExplorer/
-        ├── index.jsx                  <- root, useReducer, mode switching, preset grid
-        ├── FloorplanEditor/
-        │   ├── index.jsx              <- canvas rendering, mouse interaction
-        │   ├── MaterialToolbar.jsx    <- wall brush selector, move router, clear all
-        │   └── RouterMarker.jsx       <- status bar / placement prompt
-        ├── HeatmapViewer/
-        │   ├── index.jsx              <- heatmap canvas, legend, generation summary
-        │   └── GenerationSelector.jsx <- shadcn Tabs generation switcher
-        └── lib/
-            ├── CellTypes.js           <- cell type constants + attenuation values
-            ├── Generations.js         <- per-generation specs + descriptions
-            └── Propagation.js         <- Dijkstra signal propagation + diffusion passes
+├── assets/                            <- Static imagery & design media
+│   ├── WifiFloorPlan.png
+│   ├── WifiHeatmap.png
+│   └── [Left over assets from the template]
+├── components/
+│   ├── S01_Group6_Exhibit_Components/ <- Sectioned modular exhibit layouts
+│   │   ├── ExhibitBackground.astro
+│   │   ├── FrequencyBands.astro
+│   │   ├── SimulatorSection.astro
+│   │   └── SummaryTable.astro
+│   ├── StandardsCarousel/             <- Multi-standard highlight carousel
+│   │   ├── index.jsx
+│   │   └── StandardsData.js
+│   ├── ui/                            <- shadcn/ui primitive engine blocks
+│   │   ├── button.tsx
+│   │   ├── card.tsx
+│   │   ├── carousel.tsx
+│   │   └── tabs.tsx
+│   ├── WifiHeatmapExplorer/           <- Interactive signal simulator engine
+│   │   ├── FloorplanEditor/
+│   │   │   ├── index.jsx              <- Canvas space interaction & drawing logic
+│   │   │   ├── MaterialToolbar.jsx    <- Layout brush selector & system controls
+│   │   │   └── RouterMarker.jsx       <- Dynamic placement banner status hook
+│   │   ├── HeatmapViewer/
+│   │   │   ├── GenerationSelector.jsx <- Router target band navigation tabs
+│   │   │   └── index.jsx              <- Signal overlay visual grid assembly
+│   │   ├── lib/
+│   │   │   ├── CellTypes.js           <- Material types & absorption decibel loss
+│   │   │   ├── Generations.js         <- Operational standard parameters
+│   │   │   └── Propagation.js         <- Dijkstra path calculations & diffusion
+│   │   └── index.jsx                  <- Global context, state, reducer setup
+│   ├── DistroQuiz.jsx
+│   ├── ImageGallery.jsx
+│   └── TextWithImage.astro
+├── layouts/                           <- Document templates & structures
+│   ├── ExhibitLayout.astro
+│   └── HomepageLayout.astro
+├── lib/
+│   └── utils.ts                       <- Class tailwind-merge configuration utilities
+├── pages/                             <- Active app entry routes
+│   ├── index.mdx                      <- Main hub page
+│   ├── linux.mdx                      <- Sub-topic directory guide
+│   └── wifi-evolution.mdx             <- Primary Wi-Fi deep-dive content hub
+└── styles/                            <- Styling architecture layers
+├── global.css                     <- Template global variables
+└── S01_Group6_styles.css          <- Custom scoped glassmorphic overrides
 ```
-
 **Exhibit page** (`src/pages/wifi-evolution.mdx`) was written from scratch with structured content covering background history, a frequency band explainer, per-standard sections with real-world vs. theoretical performance figures, and the interactive simulator at the end as a synthesis activity.
 
 ---
@@ -228,9 +258,8 @@ A router marker is displayed on the grid. Users click the router (or the Router 
 
 Clicking "View Heatmap" precomputes signal heatmaps for all seven generations simultaneously using a Dijkstra-based propagation algorithm. Signal at each cell is calculated as:
 
-```
 signal = maxStrength - (distanceCost x distance) - sum(wallAttenuation x wallPenetration)
-```
+
 
 Switching between generations is an instant cache lookup with no recomputation. Returning to floor plan mode discards the cache.
 
@@ -245,9 +274,8 @@ Switching between generations is an instant cache lookup with no recomputation. 
 
 A tab strip above the heatmap lets users cycle through seven generations:
 
-```
 WiFi 1 (802.11b) -> WiFi 2 (802.11a) -> WiFi 3 (802.11g) -> WiFi 4 (802.11n) -> WiFi 5 (802.11ac) -> WiFi 6 (802.11ax) -> WiFi 6E
-```
+
 
 Selecting a generation updates the heatmap canvas and displays a short summary description of that generation's signal characteristics. WiFi 7 (802.11be) is covered in the exhibit text but not yet modeled in the simulator.
 
