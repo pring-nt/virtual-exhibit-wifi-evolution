@@ -114,20 +114,19 @@ export default function HeatmapViewer({ state, dispatch, cellSize, generations }
                 ref={canvasRef}
                 width={state.gridWidth  * cellSize}
                 height={state.gridHeight * cellSize}
-                className="block border border-border rounded-sm w-full"
+                className="block border border-border rounded-sm w-full h-auto aspect-[4/3]"
             />
 
-            {/* Legend + generation summary */}
-            <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
                 {LEGEND.map(({ label, color, border }) => (
                     <div key={label} className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <span
-                className="inline-block w-3 h-3 rounded-sm shrink-0"
-                style={{
-                    backgroundColor: color,
-                    border: border ? '1px solid #e2e8f0' : '1px solid transparent',
-                }}
-            />
+                        <span
+                            className="inline-block w-3 h-3 rounded-sm shrink-0"
+                            style={{
+                                backgroundColor: color,
+                                border: border ? '1px solid #e2e8f0' : '1px solid transparent',
+                            }}
+                        />
                         {label}
                     </div>
                 ))}

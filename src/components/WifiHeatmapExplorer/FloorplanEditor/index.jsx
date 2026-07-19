@@ -75,9 +75,14 @@ function drawFloorplan(ctx, state, cellSize, isRouterSelected) {
 // ---------------------------------------------------------------------------
 
 /**
- * @param {{ state: object, dispatch: Function, cellSize: number }} props
+ * @param {{
+ *   state: object,
+ *   dispatch: Function,
+ *   cellSize: number,
+ *   onViewHeatmap?: () => void
+ * }} props
  */
-export default function FloorplanEditor({ state, dispatch, cellSize }) {
+export default function FloorplanEditor({ state, dispatch, cellSize, onViewHeatmap }) {
     const canvasRef = useRef(null);
     const [isRouterSelected, setIsRouterSelected] = useState(false);
     const isDragging = useRef(false);
@@ -95,11 +100,30 @@ export default function FloorplanEditor({ state, dispatch, cellSize }) {
         }
     }, [isRouterSelected]);
 
+    /**
+     * Normalizes both mouse and touch coordinates to internal grid cells,
+     * accounting for any CSS scaling applied to the canvas.
+     */
     function getCellCoords(e) {
-        const rect = canvasRef.current.getBoundingClientRect();
+        const canvas = canvasRef.current;
+        if (!canvas) return { x: -1, y: -1 };
+
+        const rect = canvas.getBoundingClientRect();
+
+        // Extract coordinates from either mouse or touch events
+        const clientX = e.touches && e.touches.length > 0 ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches && e.touches.length > 0 ? e.touches[0].clientY : e.clientY;
+
+        // Calculate scale ratios (e.g., internal 640px width vs rendered 350px width)
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+
+        const canvasX = (clientX - rect.left) * scaleX;
+        const canvasY = (clientY - rect.top)  * scaleY;
+
         return {
-            x: Math.floor((e.clientX - rect.left) / cellSize),
-            y: Math.floor((e.clientY - rect.top)  / cellSize),
+            x: Math.floor(canvasX / cellSize),
+            y: Math.floor(canvasY / cellSize),
         };
     }
 
@@ -107,7 +131,9 @@ export default function FloorplanEditor({ state, dispatch, cellSize }) {
         return x >= 0 && x < state.gridWidth && y >= 0 && y < state.gridHeight;
     }
 
-    function handleMouseDown(e) {
+    function handleStart(e) {
+        if (e.cancelable) e.preventDefault();
+
         const { x, y } = getCellCoords(e);
         if (!inBounds(x, y)) return;
 
@@ -124,11 +150,12 @@ export default function FloorplanEditor({ state, dispatch, cellSize }) {
         dispatch({ type: 'PAINT_CELL', x, y });
     }
 
-    function handleMouseMove(e) {
+    function handleMove(e) {
+        if (e.cancelable) e.preventDefault();
         const { x, y } = getCellCoords(e);
 
-        // Update cursor when hovering over the router cell
-        if (canvasRef.current && !isRouterSelected) {
+        // Update cursor when hovering over the router cell (only applicable for mouse)
+        if (canvasRef.current && !isRouterSelected && !e.touches) {
             const overRouter = x === state.router.x && y === state.router.y;
             canvasRef.current.style.cursor = overRouter ? 'pointer' : 'crosshair';
         }
@@ -138,28 +165,35 @@ export default function FloorplanEditor({ state, dispatch, cellSize }) {
         dispatch({ type: 'PAINT_CELL', x, y });
     }
 
-    function handleMouseUp()    { isDragging.current = false; }
-    function handleMouseLeave() { isDragging.current = false; }
+    function handleEnd(e) {
+        if (e && e.cancelable) e.preventDefault();
+        isDragging.current = false;
+    }
 
     return (
-        <div className="flex flex-col gap-3 w-full">
+        <div className="flex flex-col gap-3 w-full min-w-0 max-w-full">
             <MaterialToolbar
                 state={state}
                 dispatch={dispatch}
                 isRouterSelected={isRouterSelected}
                 onMoveRouter={() => setIsRouterSelected(true)}
                 onClearAll={() => dispatch({ type: 'CLEAR_GRID' })}
+                onViewHeatmap={onViewHeatmap}
             />
 
             <canvas
                 ref={canvasRef}
                 width={state.gridWidth  * cellSize}
                 height={state.gridHeight * cellSize}
-                onMouseDown={handleMouseDown}
-                onMouseMove={handleMouseMove}
-                onMouseUp={handleMouseUp}
-                onMouseLeave={handleMouseLeave}
-                className="block border border-border rounded-sm select-none w-full"
+                onMouseDown={handleStart}
+                onMouseMove={handleMove}
+                onMouseUp={handleEnd}
+                onMouseLeave={handleEnd}
+                onTouchStart={handleStart}
+                onTouchMove={handleMove}
+                onTouchEnd={handleEnd}
+                onTouchCancel={handleEnd}
+                className="block border border-border rounded-sm select-none w-full h-auto aspect-[4/3] touch-none"
             />
 
             <RouterMarker

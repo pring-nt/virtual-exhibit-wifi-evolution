@@ -14,8 +14,7 @@ import HeatmapViewer from './HeatmapViewer/index.jsx';
 
 const GRID_WIDTH  = 40;
 const GRID_HEIGHT = 30;
-const CELL_SIZE   = 16;
-const CANVAS_W    = GRID_WIDTH  * CELL_SIZE; // 640 — drives all container widths
+const CELL_SIZE   = 16;// 640 — max desktop constraint
 
 // ---------------------------------------------------------------------------
 // Preset floor plan
@@ -52,16 +51,13 @@ function createPresetGrid(gridWidth, gridHeight) {
     vLine(7, 3, 10, CELL_TYPE.METAL);
     vLine(9, 3, 10, CELL_TYPE.METAL);
 
-
     vLine(25, 1, 13, CELL_TYPE.DRYWALL);
 
     set(25, 5, 0);
     set(25, 6, 0);
 
-
     hLine(7, 15, 21, CELL_TYPE.METAL);
     hLine(8, 15, 21, CELL_TYPE.METAL);
-
 
     hLine(6, 26, gridWidth - 2, CELL_TYPE.DRYWALL);
 
@@ -172,16 +168,14 @@ export default function WifiHeatmapExplorer() {
     const isHeatmap = state.mode === 'heatmap';
 
     return (
-        <div className="wifi-explorer flex flex-col gap-3 w-fit">
+        /* Added min-w-0 and px-2 to ensure the 640px wrapper never overflows small phone viewports */
+        <div className="wifi-explorer flex flex-col gap-3 w-full max-w-[640px] min-w-0 mx-auto px-2 sm:px-0">
 
-            {/* Mode toggle — fixed to canvas width so it never jumps */}
-            <div
-                className="flex items-center gap-2"
-                style={{ width: CANVAS_W }}
-            >
+            <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 w-full min-w-0">
                 <Button
                     variant={isHeatmap ? 'outline' : 'default'}
                     size="sm"
+                    className="w-full sm:w-auto sm:flex-1 truncate"
                     onClick={() => dispatch({ type: 'SET_MODE', mode: 'floorplan' })}
                 >
                     Edit Floor Plan
@@ -189,14 +183,14 @@ export default function WifiHeatmapExplorer() {
                 <Button
                     variant={isHeatmap ? 'default' : 'outline'}
                     size="sm"
+                    className="w-full sm:w-auto sm:flex-1 truncate"
                     onClick={() => dispatch({ type: 'SET_MODE', mode: 'heatmap' })}
                 >
                     View Heatmap
                 </Button>
             </div>
 
-            {/* Active mode — constrained to canvas width so both modes are the same size */}
-            <div style={{ width: CANVAS_W }}>
+            <div className="w-full min-w-0">
                 {isHeatmap ? (
                     <HeatmapViewer
                         state={state}
