@@ -7,10 +7,10 @@ import RouterMarker from './RouterMarker.jsx';
 // Drawing constants
 // ---------------------------------------------------------------------------
 
-const ROUTER_COLOR    = '#2563eb';
+const ROUTER_COLOR    = '#38bdf8';
 const ROUTER_SELECTED = '#f59e0b';
-const ROUTER_OUTLINE  = '#ffffff';
-const GRID_LINE_COLOR = '#e2e8f0';
+const ROUTER_OUTLINE  = '#0f172a';
+const GRID_LINE_COLOR = '#1e293b';
 
 // ---------------------------------------------------------------------------
 // Canvas draw — called via useEffect, not during render

@@ -4,7 +4,7 @@ import GenerationSelector from './GenerationSelector.jsx';
 
 // ---------------------------------------------------------------------------
 // Signal: color
-// White = no signal, red = weak, yellow = medium, green = strong
+// Dark Blue = no signal, red = weak, yellow = medium, green = strong
 // ---------------------------------------------------------------------------
 
 const COLOR_STOPS = [
@@ -14,7 +14,7 @@ const COLOR_STOPS = [
 ];
 
 function signalToColor(value) {
-    if (value <= 0) return '#ffffff'; // white = no signal
+    if (value <= 0) return '#0f172a'; // no signal
 
     const t = Math.max(0, Math.min(1, value));
     const [a, b, f] = t <= 0.5

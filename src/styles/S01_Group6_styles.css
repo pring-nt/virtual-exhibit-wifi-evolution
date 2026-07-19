@@ -172,8 +172,8 @@ body:has(#wifi-evolution-exhibit) .header__titleblock strong {
 }
 
 .article thead th:not(.wifi-explorer *, .wifi-carousel *) {
-    background: var(--c-ink);
-    color: var(--c-cream);
+    background: rgba(56, 189, 248, 0.15);
+    color: #38bdf8;
     text-align: left;
     padding: 0.6rem 0.9rem;
     font-weight: 600;
@@ -181,6 +181,7 @@ body:has(#wifi-evolution-exhibit) .header__titleblock strong {
     text-transform: uppercase;
     letter-spacing: 0.06em;
     white-space: nowrap;
+    border-bottom: 1px solid rgba(56, 189, 248, 0.3);
 }
 
 .article tbody td:not(.wifi-explorer *, .wifi-carousel *) {
