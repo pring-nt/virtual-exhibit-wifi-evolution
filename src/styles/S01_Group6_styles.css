@@ -292,6 +292,23 @@ body:has(#wifi-evolution-exhibit) .header__titleblock strong {
     border-radius: 4px;
     padding: 1.1rem 1rem 1.4rem;
     background: rgba(255, 255, 255, 0.02);
+    position: relative;
+    overflow: hidden;
+}
+
+.freq-panel:not(.wifi-explorer *, .wifi-carousel *)::after {
+    content: attr(data-ghz);
+    position: absolute;
+    right: 0.5rem;
+    bottom: -0.40rem;
+    font-size: 4.75rem;
+    font-weight: 900;
+    font-family: 'Playfair Display Variable', serif;
+    color: #ffffff;
+    opacity: 0.04;
+    line-height: 0.85;
+    pointer-events: none;
+    user-select: none;
 }
 
 .freq-panel--24:not(.wifi-explorer *, .wifi-carousel *) { border-top-color: var(--c-blue); }
