@@ -2,6 +2,7 @@ import { useRef, useEffect, useState } from 'react';
 import { CELL_CONFIGS } from '../lib/CellTypes.js';
 import MaterialToolbar from './MaterialToolbar.jsx';
 import RouterMarker from './RouterMarker.jsx';
+import { drawOuterBorder, drawRouter } from '../lib/CanvasUtils.js';
 
 // ---------------------------------------------------------------------------
 // Drawing constants
@@ -51,23 +52,14 @@ function drawFloorplan(ctx, state, cellSize, isRouterSelected) {
     ctx.lineWidth   = 0.5;
     ctx.stroke();
 
-    // --- Outer border ---
-    ctx.strokeStyle = '#cbd5e1';
-    ctx.lineWidth   = 1;
-    ctx.strokeRect(0.5, 0.5, W - 1, H - 1);
-
-    // --- Router ---
-    const cx = router.x * cellSize + cellSize / 2;
-    const cy = router.y * cellSize + cellSize / 2;
-    const r  = cellSize * 0.36;
-
-    ctx.fillStyle   = isRouterSelected ? ROUTER_SELECTED : ROUTER_COLOR;
-    ctx.strokeStyle = ROUTER_OUTLINE;
-    ctx.lineWidth   = 1.5;
-    ctx.beginPath();
-    ctx.arc(cx, cy, r, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
+    drawOuterBorder(ctx, W, H);
+    drawRouter(
+        ctx,
+        router,
+        cellSize,
+        isRouterSelected ? ROUTER_SELECTED : ROUTER_COLOR,
+        ROUTER_OUTLINE
+    );
 }
 
 // ---------------------------------------------------------------------------
@@ -78,11 +70,10 @@ function drawFloorplan(ctx, state, cellSize, isRouterSelected) {
  * @param {{
  *   state: object,
  *   dispatch: Function,
- *   cellSize: number,
- *   onViewHeatmap?: () => void
+ *   cellSize: number
  * }} props
  */
-export default function FloorplanEditor({ state, dispatch, cellSize, onViewHeatmap }) {
+export default function FloorplanEditor({ state, dispatch, cellSize }) {
     const canvasRef = useRef(null);
     const [isRouterSelected, setIsRouterSelected] = useState(false);
     const isDragging = useRef(false);
@@ -137,15 +128,20 @@ export default function FloorplanEditor({ state, dispatch, cellSize, onViewHeatm
         const { x, y } = getCellCoords(e);
         if (!inBounds(x, y)) return;
 
+        // Clicked directly on router -> toggle selected state on/off
         if (x === state.router.x && y === state.router.y) {
-            setIsRouterSelected(true);
+            setIsRouterSelected((prev) => !prev);
             return;
         }
+
+        // Router is selected -> place router at cell and exit mode
         if (isRouterSelected) {
             dispatch({ type: 'MOVE_ROUTER', x, y });
             setIsRouterSelected(false);
             return;
         }
+
+        // Normal drawing
         isDragging.current = true;
         dispatch({ type: 'PAINT_CELL', x, y });
     }
@@ -177,8 +173,8 @@ export default function FloorplanEditor({ state, dispatch, cellSize, onViewHeatm
                 dispatch={dispatch}
                 isRouterSelected={isRouterSelected}
                 onMoveRouter={() => setIsRouterSelected(true)}
+                onDeselect={() => setIsRouterSelected(false)}
                 onClearAll={() => dispatch({ type: 'CLEAR_GRID' })}
-                onViewHeatmap={onViewHeatmap}
             />
 
             <canvas
@@ -193,7 +189,7 @@ export default function FloorplanEditor({ state, dispatch, cellSize, onViewHeatm
                 onTouchMove={handleMove}
                 onTouchEnd={handleEnd}
                 onTouchCancel={handleEnd}
-                className="block border border-border rounded-sm select-none w-full h-auto aspect-[4/3] touch-none"
+                className="block border border-border rounded-sm select-none w-full h-auto aspect-4/3 touch-none"
             />
 
             <RouterMarker

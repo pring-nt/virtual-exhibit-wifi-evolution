@@ -1,5 +1,6 @@
 import { useRef, useEffect } from 'react';
 import { CELL_TYPE, CELL_CONFIGS } from '../lib/CellTypes.js';
+import { drawOuterBorder, drawRouter } from '../lib/CanvasUtils.js';
 import GenerationSelector from './GenerationSelector.jsx';
 
 // ---------------------------------------------------------------------------
@@ -59,19 +60,9 @@ function drawHeatmap(ctx, state, cellSize, heatmap) {
     }
     ctx.restore();
 
-    ctx.strokeStyle = '#cbd5e1';
-    ctx.lineWidth   = 1;
-    ctx.strokeRect(0.5, 0.5, W - 1, H - 1);
-
-    const cx = router.x * cellSize + cellSize / 2;
-    const cy = router.y * cellSize + cellSize / 2;
-    ctx.fillStyle   = '#ffffff';
-    ctx.strokeStyle = '#0f172a';
-    ctx.lineWidth   = 1.5;
-    ctx.beginPath();
-    ctx.arc(cx, cy, cellSize * 0.36, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
+    // Reusable canvas helpers
+    drawOuterBorder(ctx, W, H);
+    drawRouter(ctx, router, cellSize, '#ffffff', '#0f172a');
 }
 
 // ---------------------------------------------------------------------------
