@@ -22,11 +22,11 @@ body:has(#wifi-evolution-exhibit) {
     --popover-foreground: oklch(0.986 0.002 67.8);
     --primary: oklch(0.78 0.16 205);
     --primary-foreground: oklch(0.12 0.02 240);
-    --secondary: oklch(0.268 0.011 36.5);
+    --secondary: oklch(0.279 0.041 260);
     --secondary-foreground: oklch(0.986 0.002 67.8);
-    --muted: oklch(0.268 0.011 36.5);
+    --muted: oklch(0.279 0.041 260);
     --muted-foreground: oklch(0.714 0.014 41.2);
-    --accent: oklch(0.268 0.011 36.5);
+    --accent: oklch(0.279 0.041 260);
     --accent-foreground: oklch(0.986 0.002 67.8);
     --destructive: oklch(0.704 0.191 22.216);
     --border: oklch(1 0 0 / 12%);
@@ -34,28 +34,21 @@ body:has(#wifi-evolution-exhibit) {
     --ring: oklch(0.78 0.16 205);
     --radius: 0.625rem;
 
+    --c-ink:        #ffffff;
+    --c-cream:      #0f172a;
+    --c-muted:      #94a3b8;
+    --c-rule:       #334155;
+    --c-amber:      #f59e0b;
+    --c-amber-pale: #78350f;
+    --c-blue:       #3b82f6;
+    --c-blue-pale:  #1e3a8a;
+    --c-violet:     #8b5cf6;
+    --c-violet-pale:#4c1d95;
+    --c-teal:       #14b8a6;
+    --c-teal-pale:  #115e59;
+
     color: var(--foreground);
     overflow-x: hidden;
-}
-
-body:has(#wifi-evolution-exhibit) .article,
-body:has(#wifi-evolution-exhibit) .toc,
-body:has(#wifi-evolution-exhibit) .content__titlemeta,
-body:has(#wifi-evolution-exhibit) .header__titleblock {
-    background: rgba(15, 23, 42, 0.65) !important;
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(56, 189, 248, 0.2) !important;
-    box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.6) !important;
-    color: var(--foreground) !important;
-    max-width: 100%;
-}
-
-body:has(#wifi-evolution-exhibit) .content__titlemeta h1 {
-    color: #ffffff;
-}
-
-body:has(#wifi-evolution-exhibit) .header__titleblock strong {
-    color: #ffffff;
 }
 
 @theme inline {
@@ -94,19 +87,21 @@ body:has(#wifi-evolution-exhibit) .header__titleblock strong {
     }
 }
 
-body:has(#wifi-evolution-exhibit) {
-    --c-ink:        #ffffff;
-    --c-cream:      #0f172a;
-    --c-muted:      #94a3b8;
-    --c-rule:       #334155;
-    --c-amber:      #f59e0b;
-    --c-amber-pale: #78350f;
-    --c-blue:       #3b82f6;
-    --c-blue-pale:  #1e3a8a;
-    --c-violet:     #8b5cf6;
-    --c-violet-pale:#4c1d95;
-    --c-teal:       #14b8a6;
-    --c-teal-pale:  #115e59;
+body:has(#wifi-evolution-exhibit) .article,
+body:has(#wifi-evolution-exhibit) .toc,
+body:has(#wifi-evolution-exhibit) .content__titlemeta,
+body:has(#wifi-evolution-exhibit) .header__titleblock {
+    background: rgba(15, 23, 42, 0.65) !important;
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(56, 189, 248, 0.2) !important;
+    box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.6) !important;
+    color: var(--foreground) !important;
+    max-width: 100%;
+}
+
+body:has(#wifi-evolution-exhibit) .content__titlemeta h1,
+body:has(#wifi-evolution-exhibit) .header__titleblock strong {
+    color: #ffffff;
 }
 
 .article p:not(.wifi-explorer *, .wifi-carousel *) {
@@ -161,6 +156,60 @@ body:has(#wifi-evolution-exhibit) {
     margin: 2.5rem 0;
 }
 
+.article :not(pre) > code:not(.wifi-explorer *, .wifi-carousel *) {
+    background-color: rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--c-rule);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+    font-size: 0.875em;
+    word-break: break-all;
+}
+
+.article pre:not(.wifi-explorer *, .wifi-carousel *) {
+    background-color: rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--c-rule);
+    border-left: 3px solid var(--c-amber);
+    border-radius: 4px;
+    padding: 1rem 1.25rem;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.callout:not(.wifi-explorer *, .wifi-carousel *) {
+    background: var(--c-amber-pale);
+    border-left: 3px solid var(--c-amber);
+    padding: 0.9rem 1.125rem;
+    border-radius: 0 4px 4px 0;
+    margin: 1.5rem 0;
+}
+
+.references:not(.wifi-explorer *, .wifi-carousel *) {
+    font-size: 0.875em;
+    border-top: 1px solid var(--c-rule);
+    padding-top: 1.5rem;
+}
+
+body:has(#wifi-evolution-exhibit) .toc__item a,
+body:has(#wifi-evolution-exhibit) .toc__item a:link,
+body:has(#wifi-evolution-exhibit) .references a,
+body:has(#wifi-evolution-exhibit) .references a:link {
+    color: #38bdf8 !important;
+    text-decoration: none;
+}
+
+body:has(#wifi-evolution-exhibit) .toc__item a:visited,
+body:has(#wifi-evolution-exhibit) .references a:visited {
+    color: #7dd3fc !important;
+}
+
+body:has(#wifi-evolution-exhibit) .toc__item a:hover,
+body:has(#wifi-evolution-exhibit) .references a:hover {
+    color: #f0f9ff !important;
+    text-shadow: 0 0 8px rgba(56, 189, 248, 0.8);
+    text-decoration: underline;
+}
+
 .article table:not(.wifi-explorer *, .wifi-carousel *) {
     width: 100%;
     border-collapse: collapse;
@@ -208,7 +257,6 @@ body:has(#wifi-evolution-exhibit) {
         display: none;
     }
 
-    /* Wrap each mobile row into a neat, self-contained card */
     .article table.responsive-table:not(.wifi-explorer *, .wifi-carousel *) tbody tr {
         display: block;
         border: 1px solid var(--c-rule);
@@ -236,7 +284,6 @@ body:has(#wifi-evolution-exhibit) {
         border-bottom: none;
     }
 
-    /* Mobile Card Header: Replaced bright white ink with sleek sky-blue tint */
     .article table.responsive-table:not(.wifi-explorer *, .wifi-carousel *) tbody td:first-child {
         background: rgba(56, 189, 248, 0.15) !important;
         color: #ffffff !important;
@@ -250,7 +297,6 @@ body:has(#wifi-evolution-exhibit) {
         text-align: left;
     }
 
-    /* Fixed syntax: :not() moved BEFORE the ::before pseudo-element */
     .article table.responsive-table:not(.wifi-explorer *, .wifi-carousel *) tbody td:first-child::before {
         display: none;
     }
@@ -266,34 +312,6 @@ body:has(#wifi-evolution-exhibit) {
         text-align: left;
         flex-shrink: 0;
     }
-}
-
-.article :not(pre) > code:not(.wifi-explorer *, .wifi-carousel *) {
-    background-color: rgba(255, 255, 255, 0.08);
-    border: 1px solid var(--c-rule);
-    padding: 0.15em 0.4em;
-    border-radius: 4px;
-    font-size: 0.875em;
-    word-break: break-all;
-}
-
-.article pre:not(.wifi-explorer *, .wifi-carousel *) {
-    background-color: rgba(0, 0, 0, 0.4);
-    border: 1px solid var(--c-rule);
-    border-left: 3px solid var(--c-amber);
-    border-radius: 4px;
-    padding: 1rem 1.25rem;
-    max-width: 100%;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-}
-
-.callout:not(.wifi-explorer *, .wifi-carousel *) {
-    background: var(--c-amber-pale);
-    border-left: 3px solid var(--c-amber);
-    padding: 0.9rem 1.125rem;
-    border-radius: 0 4px 4px 0;
-    margin: 1.5rem 0;
 }
 
 .freq-panels:not(.wifi-explorer *, .wifi-carousel *) {
@@ -368,33 +386,12 @@ body:has(#wifi-evolution-exhibit) {
 .wifi-carousel .badge-tri,
 .badge-tri:not(.wifi-explorer *, .wifi-carousel *)  { background: #1a2e1a !important; color: #86efac !important; }
 
-.references:not(.wifi-explorer *, .wifi-carousel *) {
-    font-size: 0.875em;
-    border-top: 1px solid var(--c-rule);
-    padding-top: 1.5rem;
+.wifi-explorer, .wifi-carousel {
+    max-width: 100% !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
 }
 
-body:has(#wifi-evolution-exhibit) .toc__item a,
-body:has(#wifi-evolution-exhibit) .toc__item a:link,
-body:has(#wifi-evolution-exhibit) .references a,
-body:has(#wifi-evolution-exhibit) .references a:link {
-    color: #38bdf8 !important;
-    text-decoration: none;
-}
-
-body:has(#wifi-evolution-exhibit) .toc__item a:visited,
-body:has(#wifi-evolution-exhibit) .references a:visited {
-    color: #7dd3fc !important;
-}
-
-body:has(#wifi-evolution-exhibit) .toc__item a:hover,
-body:has(#wifi-evolution-exhibit) .references a:hover {
-    color: #f0f9ff !important;
-    text-shadow: 0 0 8px rgba(56, 189, 248, 0.8);
-    text-decoration: underline;
-}
-
-/* Base text color fallback safely excluding badges, styled text, and outputs */
 .wifi-explorer, .wifi-carousel,
 .wifi-explorer h1, .wifi-explorer h2, .wifi-explorer h3, .wifi-explorer h4,
 .wifi-explorer p, .wifi-explorer label,
@@ -409,13 +406,30 @@ body:has(#wifi-evolution-exhibit) .references a:hover {
 }
 
 .wifi-explorer .text-muted-foreground,
-.wifi-explorer [class*="text-muted"] {
+.wifi-carousel .text-muted-foreground,
+.wifi-explorer [class*="text-muted"],
+.wifi-carousel [class*="text-muted"] {
     color: #94a3b8 !important;
 }
 
-/* Tab UI Styling */
-.wifi-explorer div[role="tablist"],
-.wifi-explorer [class*="bg-muted"] {
+.wifi-explorer button,
+.wifi-carousel button {
+    color: #f8fafc !important;
+}
+
+.wifi-explorer button[class*="bg-primary"],
+.wifi-carousel button[class*="bg-primary"],
+.wifi-explorer button[data-state="active"],
+.wifi-carousel button[data-state="active"] {
+    color: #020617 !important;
+}
+
+.wifi-explorer button:not([role="tab"]) *,
+.wifi-carousel button:not([role="tab"]) * {
+    color: inherit !important;
+}
+
+.wifi-explorer div[role="tablist"] {
     background-color: rgba(15, 23, 42, 0.5) !important;
     border: 1px solid rgba(56, 189, 248, 0.2) !important;
     border-radius: 0 !important;
@@ -453,7 +467,18 @@ body:has(#wifi-evolution-exhibit) .references a:hover {
     box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.3) !important;
 }
 
-/* Custom Scrollbar Utilities for Static Panel Heights */
+body:has(#wifi-evolution-exhibit) [role="dialog"] > button.absolute {
+    background-color: transparent !important;
+    color: #94a3b8 !important;
+    border-radius: 0.375rem !important;
+    transition: all 0.2s ease !important;
+}
+
+body:has(#wifi-evolution-exhibit) [role="dialog"] > button.absolute:hover {
+    background-color: rgba(56, 189, 248, 0.15) !important;
+    color: #ffffff !important;
+}
+
 .custom-scrollbar::-webkit-scrollbar {
     width: 6px;
 }
@@ -467,29 +492,4 @@ body:has(#wifi-evolution-exhibit) .references a:hover {
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.3);
-}
-
-.wifi-explorer, .wifi-carousel {
-    max-width: 100% !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
-}
-
-.wifi-explorer .text-muted-foreground,
-.wifi-carousel .text-muted-foreground,
-.wifi-explorer [class*="text-muted"],
-.wifi-carousel [class*="text-muted"] {
-    color: #94a3b8 !important;
-}
-
-body:has(#wifi-evolution-exhibit) [role="dialog"] > button {
-    background-color: transparent !important;
-    color: #94a3b8 !important;
-    border-radius: 0.375rem !important;
-    transition: all 0.2s ease !important;
-}
-
-body:has(#wifi-evolution-exhibit) [role="dialog"] > button:hover {
-    background-color: rgba(56, 189, 248, 0.15) !important;
-    color: #ffffff !important;
 }
